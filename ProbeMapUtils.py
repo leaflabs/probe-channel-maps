@@ -9,7 +9,7 @@ Example usage:
 >>> generate_level2_mapping('64chan/probeMap_64_level1.p', chip2conn, '64chan/probeMap_64_level2.p')
 """
 
-import pickle
+import pickle, os
 
 # chipChan is the channel number local to the chip
 ffcTrace2chipChan = {
@@ -84,4 +84,44 @@ def print_chip2conn(level2_pickle):
     for chip,conn in chip2conn.items():
         print 'Chip %d connects to connector %d' % (chip,conn)
     print ''
+
+def generate_text_file_level1(level1_picklefile, outfile):
+    level1_map = pickle.load(open(level1_picklefile, 'rb'))
+    nshanks = level1_map['nshanks']
+    nrows = level1_map['nrows']
+    ncols = level1_map['ncols']
+    with open(outfile, 'w') as f:
+        f.write('# generated from %s\n' % os.path.basename(level1_picklefile))
+        f.write('# nshanks = %d\n' % nshanks)
+        f.write('# nrows = %d\n' % nrows)
+        f.write('# ncols = %d\n' % ncols)
+        f.write('# The following data is in the format:\n')
+        f.write('#   shank row col    connector ffcTrace\n')
+        f.write('# (see probe-channel-maps/READEME.md for a definition of these coordinates)\n')
+        for shank in range(nshanks):
+            for row in range(nrows):
+                for col in range(ncols):
+                    conn, ffcTrace = level1_map[shank,row,col]
+                    f.write('%d %d %d    %d %d\n' % (shank, row, col, conn, ffcTrace))
+    
+
+def generate_text_file_level2(level2_picklefile, outfile):
+    level2_map = pickle.load(open(level2_picklefile, 'rb'))
+    nshanks = level2_map['nshanks']
+    nrows = level2_map['nrows']
+    ncols = level2_map['ncols']
+    with open(outfile, 'w') as f:
+        f.write('# generated from %s\n' % os.path.basename(level2_picklefile))
+        f.write('# nshanks = %d\n' % nshanks)
+        f.write('# nrows = %d\n' % nrows)
+        f.write('# ncols = %d\n' % ncols)
+        f.write('# chip2conn = %s\n' % str(level2_map['chip2conn']))
+        f.write('# The following data is in the format:\n')
+        f.write('#   shank row col    willowChan\n')
+        f.write('# (see probe-channel-maps/READEME.md for a definition of these coordinates)\n')
+        for shank in range(nshanks):
+            for row in range(nrows):
+                for col in range(ncols):
+                    willowChan = level2_map[shank,row,col]
+                    f.write('%d %d %d    %d\n' % (shank, row, col, willowChan))
 
